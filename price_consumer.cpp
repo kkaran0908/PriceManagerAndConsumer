@@ -68,21 +68,43 @@ int main ()
 {
     std::string server_ip = "127.0.0.1";
     int server_port = 8080;
-
-
     PriceConsumer pc(server_ip, server_port);
     pc.connect_to_price_manager();
+    while(true)
+    {
+        std::cout << "1. Press-1 for instrumentList!" << std::endl;
+        std::cout << "2. Press-2 for priceUpdate!" << std::endl;
+        std::cout << "3. Press-3 to close the connection!" << std::endl;
+        int userInput;
+        std::cin >> userInput; 
 
-    Message message(MessageType::SymbolList, "Please send the whole list of available instruments\n");
-
-    pc.send_message(message);
-
-    const std::string response = pc.receive_update();
-
-    //as of now consumer will close the connection once it receives the instrument-list
-    std::cout << "\n*********Supported List of Instruments: " << response << std::endl;
-
-    pc.close_connection();
+        if(userInput == 1)
+        {
+            Message message(MessageType::SymbolList, "Please send the whole list of available instruments\n");
+            pc.send_message(message);
+            std::string response = pc.receive_update();
+            std::cout << "\n*********Supported List of Instruments: " << response << std::endl;
+        }
+        else if(userInput == 2)
+        {
+            std::string instrName;
+            std::cin >> "Please provide the instrument:\t" << instrName << std::endl;
+            Message message(MessageType::PriceUpdate, "Please send the PriceUpdate\n", instrName);
+            pc.send_message(message);
+            std::string response1 = pc.receive_update();
+            std::string response2 = pc.receive_update();
+            std::cout << "\nPriceUpdate:\t" << response1 << std::endl;
+            std::cout << "\nPriceUpdate:\t" << response2 << std::endl;
+        }
+        else
+        {
+            Message message(MessageType::PriceDisconnect, "Please disconnect the connection\n");
+            pc.send_message(message);
+            pc.close_connection();
+            break;
+        }
+    }
+    
 
     return 0;
 }
